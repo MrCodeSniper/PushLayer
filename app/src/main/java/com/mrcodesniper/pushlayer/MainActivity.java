@@ -1,9 +1,15 @@
 package com.mrcodesniper.pushlayer;
 
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.mrcodesniper.pushlayer_module.ConnectCallback;
+import com.mrcodesniper.pushlayer_module.MessageReceiveListener;
+import com.mrcodesniper.pushlayer_module.PushManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -11,11 +17,38 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        PushLayerService.startService(this); //开启服务
     }
 
-    public void btnPushMsg(View v){
-        PushLayerService.pushMsg("{\n" +
+
+    public void btnConnect(View v) {
+        PushManager.getInstance().doClientConnection(this, new ConnectCallback() {
+            @Override
+            public void onConnectSuccess() {
+                Toast.makeText(MainActivity.this, "连接成功", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onConnectFail(Throwable t) {
+                Toast.makeText(MainActivity.this, "连接失败", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        PushManager.getInstance().registerMsgReceiveListener(this, "Main", new MessageReceiveListener() {
+            @Override
+            public void onReceivedMsg(String msg) {
+                TextView mTv = findViewById(R.id.textView);
+                mTv.setText(msg);
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    public void btnPushMsg(View v) {
+        PushManager.getInstance().mockPushMsg("{\n" +
                 "\n" +
                 "    \"resultcode\": \"200\",\n" +
                 "\n" +

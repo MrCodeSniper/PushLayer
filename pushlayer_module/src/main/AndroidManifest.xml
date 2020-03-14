@@ -1,0 +1,21 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.mrcodesniper.pushlayer_module">
+
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+
+    <application>
+
+        <service android:name="org.eclipse.paho.android.service.MqttService"/>
+
+
+        <!--push进程只负责网络连接不涉及任何push业务 在应用层应该设计一个消息的业务分发中心-->
+<!--        <service android:name="com.mrcodesniper.pushlayer_module.PushLayerService"-->
+<!--            />-->
+
+    </application>
+
+</manifest>
