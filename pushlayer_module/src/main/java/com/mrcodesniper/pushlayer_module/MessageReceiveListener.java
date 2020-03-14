@@ -1,9 +1,9 @@
 package com.mrcodesniper.pushlayer_module;
 
-public interface MessageReceiveListener {
+public interface MessageReceiveListener<T> {
     /**
      * 接收到消息
-     * @param msg
+     * @param data
      */
-    public void onReceivedMsg(String msg);
+    public void onReceivedMsg(T data);
 }

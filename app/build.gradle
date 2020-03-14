@@ -4,6 +4,11 @@ android {
     compileSdkVersion 28
     buildToolsVersion "29.0.3"
 
+    viewBinding {
+        enabled = true
+    }
+
+
     defaultConfig {
         applicationId "com.mrcodesniper.pushlayer"
         minSdkVersion 16

@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">PushLayer</string>
+
+    <string name="city_push_json">{
+"bizType":"city",
+ "content":{
+    "id": 26,
+    "pid": 0,
+    "city_code": "101030100",
+    "city_name": "天津",
+    "post_code": "300000",
+    "area_code": "022",
+    "ctime": "2019-07-11 17:30:08"
+  }
+}</string>
 </resources>

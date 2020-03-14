@@ -29,13 +29,21 @@
         />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/btn_push_city"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:onClick="btnPushMsg"
-        android:text="发布消息"
+        android:onClick="btnPushCityMsg"
+        android:text="发布城市类型消息"
        />
+
+
+    <Button
+        android:id="@+id/btn_push_weather"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="btnPushWeatherMsg"
+        android:text="发布天气类型消息"
+        />
 
 </LinearLayout>
 

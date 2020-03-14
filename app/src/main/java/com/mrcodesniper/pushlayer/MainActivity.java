@@ -3,13 +3,18 @@ package com.mrcodesniper.pushlayer;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.reflect.TypeToken;
 import com.mrcodesniper.pushlayer_module.ConnectCallback;
 import com.mrcodesniper.pushlayer_module.MessageReceiveListener;
+import com.mrcodesniper.pushlayer_module.PushBean;
 import com.mrcodesniper.pushlayer_module.PushManager;
+
+import java.lang.reflect.Type;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -17,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
     }
 
 
@@ -32,136 +38,30 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "连接失败", Toast.LENGTH_SHORT).show();
             }
         });
-
-        PushManager.getInstance().registerMsgReceiveListener(this, "Main", new MessageReceiveListener() {
+        Type fooType = new TypeToken <PushBean<City>>() {}.getType();
+        PushManager.getInstance().registerMsgReceiveListener(this, "city",fooType,new MessageReceiveListener<City>() {
             @Override
-            public void onReceivedMsg(String msg) {
+            public void onReceivedMsg(City data) {
                 TextView mTv = findViewById(R.id.textView);
-                mTv.setText(msg);
+                mTv.setText(data.toString());
+            }
+        });
+        Type weaType = new TypeToken <PushBean<Weather>>() {}.getType();
+        PushManager.getInstance().registerMsgReceiveListener(this, "weather", weaType, new MessageReceiveListener<Weather>() {
+            @Override
+            public void onReceivedMsg(Weather data) {
+                TextView mTv = findViewById(R.id.textView);
+                mTv.setText(data.toString());
             }
         });
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+
+    public void btnPushCityMsg(View v) {
+        PushManager.getInstance().mockPushMsg("{\"bizType\":\"city\",\"content\":{\"id\":26,\"pid\":0,\"city_code\":\"101030100\",\"city_name\":\"天津\",\"post_code\":\"300000\",\"area_code\":\"022\",\"ctime\":\"2019-07-11 17:30:08\"}}\n");
     }
 
-    public void btnPushMsg(View v) {
-        PushManager.getInstance().mockPushMsg("{\n" +
-                "\n" +
-                "    \"resultcode\": \"200\",\n" +
-                "\n" +
-                "    \"reason\": \"successed!\",\n" +
-                "\n" +
-                "    \"result\": {\n" +
-                "\n" +
-                "        \"sk\": {\n" +
-                "\n" +
-                "            \"temp\": \"24\",\n" +
-                "\n" +
-                "            \"wind_direction\": \"西南风\",\n" +
-                "\n" +
-                "            \"wind_strength\": \"2级\",\n" +
-                "\n" +
-                "            \"humidity\": \"51%\",\n" +
-                "\n" +
-                "            \"time\": \"10:11\"\n" +
-                "\n" +
-                "        },\n" +
-                "\n" +
-                "        \"today\": {\n" +
-                "\n" +
-                "            \"temperature\": \"16℃~27℃\",\n" +
-                "\n" +
-                "            \"weather\": \"阴转多云\",\n" +
-                "\n" +
-                "            \"weather_id\": {\n" +
-                "\n" +
-                "                \"fa\": \"02\",\n" +
-                "\n" +
-                "                \"fb\": \"01\"\n" +
-                "\n" +
-                "            },\n" +
-                "\n" +
-                "            \"wind\": \"西南风3-4 级\",\n" +
-                "\n" +
-                "            \"week\": \"星期四\",\n" +
-                "\n" +
-                "            \"city\": \"滨州\",\n" +
-                "\n" +
-                "            \"date_y\": \"2015年06月04日\",\n" +
-                "\n" +
-                "            \"dressing_index\": \"舒适\",\n" +
-                "\n" +
-                "            \"dressing_advice\": \"建议着长袖T恤、衬衫加单裤等服装。年老体弱者宜着针织长袖衬衫、马甲和长裤。\",\n" +
-                "\n" +
-                "            \"uv_index\": \"最弱\",\n" +
-                "\n" +
-                "            \"comfort_index\": \"\",\n" +
-                "\n" +
-                "            \"wash_index\": \"较适宜\",\n" +
-                "\n" +
-                "            \"travel_index\": \"\",\n" +
-                "\n" +
-                "            \"exercise_index\": \"较适宜\",\n" +
-                "\n" +
-                "            \"drying_index\": \"\"\n" +
-                "\n" +
-                "        },\n" +
-                "\n" +
-                "        \"future\": [\n" +
-                "\n" +
-                "            {\n" +
-                "\n" +
-                "                \"temperature\": \"16℃~27℃\",\n" +
-                "\n" +
-                "                \"weather\": \"阴转多云\",\n" +
-                "\n" +
-                "                \"weather_id\": {\n" +
-                "\n" +
-                "                    \"fa\": \"02\",\n" +
-                "\n" +
-                "                    \"fb\": \"01\"\n" +
-                "\n" +
-                "                },\n" +
-                "\n" +
-                "                \"wind\": \"西南风3-4 级\",\n" +
-                "\n" +
-                "                \"week\": \"星期四\",\n" +
-                "\n" +
-                "                \"date\": \"20150604\"\n" +
-                "\n" +
-                "            },\n" +
-                "\n" +
-                "            {\n" +
-                "\n" +
-                "                \"temperature\": \"20℃~32℃\",\n" +
-                "\n" +
-                "                \"weather\": \"多云转晴\",\n" +
-                "\n" +
-                "                \"weather_id\": {\n" +
-                "\n" +
-                "                    \"fa\": \"01\",\n" +
-                "\n" +
-                "                    \"fb\": \"00\"\n" +
-                "\n" +
-                "                },\n" +
-                "\n" +
-                "                \"wind\": \"西风3-4 级\",\n" +
-                "\n" +
-                "                \"week\": \"星期五\",\n" +
-                "\n" +
-                "                \"date\": \"20150605\"\n" +
-                "\n" +
-                "            }\n" +
-                "\n" +
-                "        ]\n" +
-                "\n" +
-                "    },\n" +
-                "\n" +
-                "    \"error_code\": 0\n" +
-                "\n" +
-                "}");
+    public void btnPushWeatherMsg(View v){
+        PushManager.getInstance().mockPushMsg("{\"bizType\":\"weather\",\"content\":{\"day\":\"08日08时\",\"wea\":\"晴\",\"tem\":\"-3℃\",\"win\":\"北风\",\"win_speed\":\"5-6级\"}}\n");
     }
 }

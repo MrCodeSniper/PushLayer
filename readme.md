@@ -1,4 +1,4 @@
-### PushLayer
+### PushLayer(也可以支持基础IM)
 
 #### 推送层的设计
 

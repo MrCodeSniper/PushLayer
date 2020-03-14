@@ -5,8 +5,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Parcel;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -17,6 +23,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,9 +42,14 @@ public class PushManager implements IConnect {
 
     private ConnectCallback mConnectCallback;
 
-    private Map<String, MessageReceiveListener> msgReceiveListenerMap = new HashMap<String, MessageReceiveListener>();
+    private Gson mGson;
 
-    private PushManager() {}
+    private Map<String, MessageReceiveListener> msgReceiveListenerMap = new HashMap<String, MessageReceiveListener>();
+    private Map<String,Type> typeMap=new HashMap<>();
+
+    private PushManager() {
+        mGson = new GsonBuilder().enableComplexMapKeySerialization().create();
+    }
 
     public static PushManager getInstance() {
         return manager;
@@ -45,7 +58,7 @@ public class PushManager implements IConnect {
     public void init(Context context, @NonNull final PushOption option) {
         this.option = option;
         client = new MqttAndroidClient(context, option.getServer(), Build.SERIAL);
-        if(mqttConnectOptions==null){
+        if (mqttConnectOptions == null) {
             mqttConnectOptions = new MqttConnectOptions();
             mqttConnectOptions.setCleanSession(option.isCleanSession());
             mqttConnectOptions.setConnectionTimeout((int) option.getConnectTimeout());
@@ -58,9 +71,10 @@ public class PushManager implements IConnect {
 
     /**
      * 模拟服务器推送消息
+     *
      * @param msg
      */
-    public void mockPushMsg(String msg){
+    public void mockPushMsg(String msg) {
         String topic = option.getPublishChannel();
         int qos = option.getPushType().value;
         boolean retained = false;
@@ -75,11 +89,11 @@ public class PushManager implements IConnect {
 
     @Override
     public void doClientConnection(final Context context, final ConnectCallback listener) {
-        if(client==null){
+        if (client == null) {
             return;
         }
-        mConnectCallback=listener;
-        if (!client.isConnected() && isConnectIsNomarl(context,listener)) {
+        mConnectCallback = listener;
+        if (!client.isConnected() && isConnectIsNomarl(context, listener)) {
             try {
                 client.connect(mqttConnectOptions, null, new IMqttActionListener() {
                     @Override
@@ -99,7 +113,7 @@ public class PushManager implements IConnect {
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                         exception.printStackTrace();
                         Log.i(TAG, "连接失败 ");
-                        doClientConnection(context,listener);//连接失败，重连（可关闭服务器进行模拟）
+                        doClientConnection(context, listener);//连接失败，重连（可关闭服务器进行模拟）
                         if (listener != null) {
                             listener.onConnectFail(exception);
                         }
@@ -127,7 +141,7 @@ public class PushManager implements IConnect {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    doClientConnection(context,callback);
+                    doClientConnection(context, callback);
                 }
             }, 3000);
             return false;
@@ -137,45 +151,51 @@ public class PushManager implements IConnect {
     /**
      * 回收资源
      */
-    public void destroy(){
+    public void destroy() {
         try {
-            if(client!=null){
+            if (client != null) {
                 client.disconnect(); //断开连接
-                client=null;
+                client = null;
             }
-            if(msgReceiveListenerMap!=null){
+            if (msgReceiveListenerMap != null) {
                 msgReceiveListenerMap.clear();
-                msgReceiveListenerMap=null;
+                msgReceiveListenerMap = null;
             }
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
+
     /**
      * 注册消息接收器 根据业务区分开
      *
      * @param listener
      */
-    public void registerMsgReceiveListener(final Context context, String bizType, MessageReceiveListener listener) {
-        if (listener != null) {
-            msgReceiveListenerMap.put("PushManger#" + bizType, listener);
-        }
+    public <T> void  registerMsgReceiveListener(final Context context, String bizType, Type type, MessageReceiveListener<T> listener) {
+        msgReceiveListenerMap.put("PushManger#" + bizType, listener);
+        typeMap.put(bizType,type);
         client.setCallback(new MqttCallback() {
             @Override
             public void connectionLost(Throwable cause) {
                 Log.i(TAG, "连接断开 ");
-                doClientConnection(context,mConnectCallback);//连接断开，重连
+                doClientConnection(context, mConnectCallback);//连接断开，重连
             }
 
             @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
+            public void messageArrived(String topic, MqttMessage message) {
                 Log.i(TAG, "收到消息： " + new String(message.getPayload()));
-                for(Map.Entry<String, MessageReceiveListener> entry : msgReceiveListenerMap.entrySet()){
+                String json = new String(message.getPayload());
+                PushBean pushBean=mGson.fromJson(json,PushBean.class);
+                Type mType=typeMap.get(pushBean.getBizType());
+                PushBean data = mGson.fromJson(json, mType);
+                for (Map.Entry<String, MessageReceiveListener> entry : msgReceiveListenerMap.entrySet()) {
                     String mBiz = entry.getKey();
-                    MessageReceiveListener observer = entry.getValue();
-                    if(observer!=null){
-                        observer.onReceivedMsg(new String(message.getPayload()));
+                    if (TextUtils.equals(mBiz,"PushManger#"+ data.getBizType())) {
+                        MessageReceiveListener observer = entry.getValue();
+                        if (observer != null) {
+                            observer.onReceivedMsg(data.getContent());
+                        }
                     }
                 }
                 //收到其他客户端的消息后，响应给对方告知消息已到达或者消息有问题等
@@ -189,8 +209,10 @@ public class PushManager implements IConnect {
         });
     }
 
+
     /**
      * 响应 （收到其他客户端的消息后，响应给对方告知消息已到达或者消息有问题等）
+     *
      * @param message 消息
      */
     public void response(String message) {
