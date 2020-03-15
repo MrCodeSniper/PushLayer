@@ -9,11 +9,18 @@
 
     <application>
 
-        <service android:name="org.eclipse.paho.android.service.MqttService"/>
+        <service android:name="org.eclipse.paho.android.service.MqttService"
+            android:process=":CodeSniperPush"
+            />
 
 
         <!--push进程只负责网络连接不涉及任何push业务 在应用层应该设计一个消息的业务分发中心-->
-        <service android:name="com.mrcodesniper.pushlayer_module.PushLayerService" />
+        <service android:name="com.mrcodesniper.pushlayer_module.PushLayerService"
+            android:process=":CodeSniperPush"
+            android:enabled="true"
+            android:exported="true"
+            />
+
 
     </application>
 

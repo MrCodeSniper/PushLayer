@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Messenger;
 import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -36,6 +37,10 @@ public class PushManager implements IConnect {
 
     private MqttAndroidClient client;
 
+    public MqttAndroidClient getClient() {
+        return client;
+    }
+
     private PushOption option;
 
     private MqttConnectOptions mqttConnectOptions;
@@ -66,7 +71,12 @@ public class PushManager implements IConnect {
             mqttConnectOptions.setUserName(option.getUserName());
             mqttConnectOptions.setPassword(option.getPassWord().toCharArray());
         }
+    }
 
+    public void setSimpleMsgCallback(Context context, Messenger messenger){
+        if(client!=null){
+            client.setCallback(new MsgReceiveCallback(context,mConnectCallback,messenger));
+        }
     }
 
     private void initLastWill(Context context,ConnectCallback listener){
@@ -122,7 +132,6 @@ public class PushManager implements IConnect {
                 client.connect(mqttConnectOptions, null, new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.i(TAG, "连接成功 ");
                         try {
                             client.subscribe(option.getPublishChannel(), option.getPushType().value);//订阅主题，参数：主题、服务质量
                         } catch (MqttException e) {
@@ -136,7 +145,6 @@ public class PushManager implements IConnect {
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                         exception.printStackTrace();
-                        Log.i(TAG, "连接失败 ");
                         doClientConnection(context, listener);//连接失败，重连（可关闭服务器进行模拟）
                         if (listener != null) {
                             listener.onConnectFail(exception);
