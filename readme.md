@@ -53,3 +53,7 @@
 
 1.长连接？
 2.协议格式 优点或者缺点
+
+#### 附录
+
+https://www.cnblogs.com/lixiansheng/p/11359922.html
