@@ -66,6 +66,29 @@ public class PushManager implements IConnect {
             mqttConnectOptions.setUserName(option.getUserName());
             mqttConnectOptions.setPassword(option.getPassWord().toCharArray());
         }
+
+    }
+
+    private void initLastWill(Context context,ConnectCallback listener){
+        // last will message
+        String message = "{\"terminal_uid\":\"" + Build.SERIAL + "\"}";
+        String topic = option.getPublishChannel();
+        int qos = option.getPushType().value;
+        boolean retained = false;
+        if ((!"".equals(message)) || (!"".equals(topic))) {
+            // 最后的遗嘱
+            try {
+                mqttConnectOptions.setWill(topic, message.getBytes(), qos, retained);
+            } catch (Exception e) {
+                Log.i(TAG, "Exception Occured", e);
+                e.printStackTrace();
+                Log.i(TAG, "连接失败 ");
+                doClientConnection(context, listener);//连接失败，重连（可关闭服务器进行模拟）
+                if (listener != null) {
+                    listener.onConnectFail(e);
+                }
+            }
+        }
     }
 
 
@@ -92,6 +115,7 @@ public class PushManager implements IConnect {
         if (client == null) {
             return;
         }
+        initLastWill(context,listener);
         mConnectCallback = listener;
         if (!client.isConnected() && isConnectIsNomarl(context, listener)) {
             try {
@@ -160,6 +184,10 @@ public class PushManager implements IConnect {
             if (msgReceiveListenerMap != null) {
                 msgReceiveListenerMap.clear();
                 msgReceiveListenerMap = null;
+            }
+            if(typeMap!=null){
+                typeMap.clear();
+                typeMap=null;
             }
         } catch (MqttException e) {
             e.printStackTrace();

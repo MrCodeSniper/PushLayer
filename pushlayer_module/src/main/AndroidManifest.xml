@@ -13,8 +13,7 @@
 
 
         <!--push进程只负责网络连接不涉及任何push业务 在应用层应该设计一个消息的业务分发中心-->
-<!--        <service android:name="com.mrcodesniper.pushlayer_module.PushLayerService"-->
-<!--            />-->
+        <service android:name="com.mrcodesniper.pushlayer_module.PushLayerService" />
 
     </application>
 

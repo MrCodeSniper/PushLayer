@@ -3,12 +3,13 @@ package com.mrcodesniper.pushlayer;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.reflect.TypeToken;
+import com.mrcodesniper.pushlayer.bean.City;
+import com.mrcodesniper.pushlayer.bean.Weather;
 import com.mrcodesniper.pushlayer_module.ConnectCallback;
 import com.mrcodesniper.pushlayer_module.MessageReceiveListener;
 import com.mrcodesniper.pushlayer_module.PushBean;
@@ -26,18 +27,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void btnConnect(View v) {
-        PushManager.getInstance().doClientConnection(this, new ConnectCallback() {
-            @Override
-            public void onConnectSuccess() {
-                Toast.makeText(MainActivity.this, "连接成功", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onConnectFail(Throwable t) {
-                Toast.makeText(MainActivity.this, "连接失败", Toast.LENGTH_SHORT).show();
-            }
-        });
+    public void btnRegister(View v) {
         Type fooType = new TypeToken <PushBean<City>>() {}.getType();
         PushManager.getInstance().registerMsgReceiveListener(this, "city",fooType,new MessageReceiveListener<City>() {
             @Override

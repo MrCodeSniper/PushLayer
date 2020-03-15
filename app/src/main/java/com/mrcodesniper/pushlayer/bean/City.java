@@ -1,4 +1,4 @@
-package com.mrcodesniper.pushlayer;
+package com.mrcodesniper.pushlayer.bean;
 
 import java.io.Serializable;
 

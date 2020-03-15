@@ -24,8 +24,8 @@
         android:id="@+id/btn_connect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="btnConnect"
-        android:text="连接推送服务器"
+        android:onClick="btnRegister"
+        android:text="注册消息接收器"
         />
 
     <Button

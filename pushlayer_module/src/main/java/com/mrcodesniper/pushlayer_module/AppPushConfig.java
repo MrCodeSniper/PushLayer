@@ -1,4 +1,4 @@
-package com.mrcodesniper.pushlayer;
+package com.mrcodesniper.pushlayer_module;
 
 import android.os.Build;
 
