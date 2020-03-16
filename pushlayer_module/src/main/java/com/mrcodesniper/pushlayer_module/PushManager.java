@@ -6,14 +6,13 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Messenger;
-import android.os.Parcel;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -24,7 +23,6 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +48,7 @@ public class PushManager implements IConnect {
     private Gson mGson;
 
     private Map<String, MessageReceiveListener> msgReceiveListenerMap = new HashMap<String, MessageReceiveListener>();
+    private  Map<String, IMessageReceiveInterface> messageReceiveListenerHashMap = new HashMap<String, IMessageReceiveInterface>();
     private Map<String,Type> typeMap=new HashMap<>();
 
     private PushManager() {
@@ -200,6 +199,47 @@ public class PushManager implements IConnect {
         } catch (MqttException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public void registerMsgRemote(final Context context, String bizType,IMessageReceiveInterface callback){
+        Log.d(TAG,"register......"+ProcessUtils.getProcessName(context));
+        messageReceiveListenerHashMap.put("PushManger#" + bizType, callback);
+        client.setCallback(new MqttCallback() {
+            @Override
+            public void connectionLost(Throwable cause) {
+                Log.i(TAG, "连接断开 ");
+                doClientConnection(context, mConnectCallback);//连接断开，重连
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) {
+                Log.i(TAG, "收到消息： " + new String(message.getPayload()));
+                String json = new String(message.getPayload());
+                PushBean pushBean=mGson.fromJson(json,PushBean.class);
+                String contentJson=mGson.toJson(pushBean.getContent());
+                for (Map.Entry<String, IMessageReceiveInterface> entry : messageReceiveListenerHashMap.entrySet()) {
+                    String mBiz = entry.getKey();
+                    if (TextUtils.equals(mBiz,"PushManger#"+ pushBean.getBizType())) {
+                        IMessageReceiveInterface observer = entry.getValue();
+                        if (observer != null) {
+                            try {
+                                observer.onReceivedMsg(contentJson);
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+                //收到其他客户端的消息后，响应给对方告知消息已到达或者消息有问题等
+                response("message arrived");
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+
+            }
+        });
     }
 
 

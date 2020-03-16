@@ -41,6 +41,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void bindRemoteService(View view){
+        PolicyAidlServiceWrapper.getInstance(this).registerMsg("city");
+    }
+
     /**
      * 发送消息
      */
@@ -81,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void btnPushCityMsg(View v) {
 //        PushManager.getInstance().mockPushMsg
-       sendMessage("{\"bizType\":\"city\",\"content\":{\"id\":26,\"pid\":0,\"city_code\":\"101030100\",\"city_name\":\"天津\",\"post_code\":\"300000\",\"area_code\":\"022\",\"ctime\":\"2019-07-11 17:30:08\"}}\n");
+       PolicyAidlServiceWrapper.getInstance(this).pushMsg("{\"bizType\":\"city\",\"content\":{\"id\":26,\"pid\":0,\"city_code\":\"101030100\",\"city_name\":\"天津\",\"post_code\":\"300000\",\"area_code\":\"022\",\"ctime\":\"2019-07-11 17:30:08\"}}\n");
     }
 
     public void btnPushWeatherMsg(View v){

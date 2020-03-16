@@ -2,24 +2,33 @@
     package="com.mrcodesniper.pushlayer_module">
 
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
 
     <application>
 
-        <service android:name="org.eclipse.paho.android.service.MqttService"
-            android:process=":CodeSniperPush"
-            />
+        <service
+            android:name="org.eclipse.paho.android.service.MqttService"
+            android:process=":CodeSniperPush" />
 
 
         <!--push进程只负责网络连接不涉及任何push业务 在应用层应该设计一个消息的业务分发中心-->
-        <service android:name="com.mrcodesniper.pushlayer_module.PushLayerService"
-            android:process=":CodeSniperPush"
+        <service
+            android:name="com.mrcodesniper.pushlayer_module.PushLayerService"
             android:enabled="true"
             android:exported="true"
-            />
+            android:process=":CodeSniperPush" />
+
+        <service
+            android:name=".RemoteService"
+            android:process=":CodeSniperPush"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.mrcodesniper.pushlayer_module.action.AIDL_SERVICE" />
+            </intent-filter>
+        </service>
 
 
     </application>
