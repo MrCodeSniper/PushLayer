@@ -1,6 +1,7 @@
 package com.mrcodesniper.pushlayer_module;
 
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -13,6 +14,8 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.mrcodesniper.pushlayer_module.messenger.MessengerCallback;
+
 /**
  * 单进程service
  *
@@ -22,23 +25,27 @@ public class PushLayerService extends Service {
 
     public static final String TAG = "PushLayerService";
 
-    private Messenger mMessenger = new Messenger(new MessengerHandler());
+    //1.提供服务端Messenger
+    private Messenger mMessenger=new Messenger(new MessengerHandler(this));
 
-    private  class MessengerHandler extends Handler {
-        /**
-         * @param msg 主进程推过来的消息
-         */
+    private  class MessengerHandler extends Handler{
+
+        private Context context;
+
+        public MessengerHandler(Context context) {
+            this.context = context;
+        }
+
         @Override
         public void handleMessage(Message msg) {
-            Log.d(TAG, "收到主进程推过来的消息");
-            Bundle bundle = msg.getData();
-            PushManager.getInstance().setSimpleMsgCallback(PushLayerService.this,msg.replyTo);
-            if (bundle != null) {
-                String data=bundle.getString("key");
-                String action=bundle.getString("action");
-                if(TextUtils.equals("pushMockMsg",action)){
-                    PushManager.getInstance().mockPushMsg(data);
-                }
+            super.handleMessage(msg);
+            Log.d(TAG, "收到主进程数据库内容变化数据");
+            //2.拿到client messenger用来往客户端推消息
+            PushManager.getInstance().setMsgCallback(PushLayerService.this,msg.replyTo);
+            Bundle bundle=msg.getData();
+            if(bundle!=null){
+                String data=bundle.getString(AppPushConfig.PAY_LOAD,"");
+                PushManager.getInstance().mockPushMsg(data);
             }
         }
     }
@@ -69,7 +76,7 @@ public class PushLayerService extends Service {
                 Log.e(TAG, t.getMessage());
             }
         });
-        PushManager.getInstance().setSimpleMsgCallback(this,mMessenger);
+        //2.将当前messenger提供给客户端
         return mMessenger.getBinder();
     }
 
@@ -77,18 +84,41 @@ public class PushLayerService extends Service {
      * 绑定服务
      *
      * @param context    环境
-     * @param connection 连接
      */
-    public static void bindService(Context context, ServiceConnection connection) {
+    public static void bindService(Context context) {
         Intent mIntent = new Intent(context, PushLayerService.class);
-        context.bindService(mIntent, connection, Context.BIND_AUTO_CREATE);
+        context.bindService(mIntent, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                Log.d(TAG,"onServiceConnected:"+name+"&&"+service);
+                Messenger mService = new Messenger(service);
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                Log.d(TAG,"onServiceDisconnected:"+name);
+            }
+        }, Context.BIND_AUTO_CREATE);
     }
 
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand" + ProcessUtils.getProcessName(this));
-        return super.onStartCommand(intent, flags, startId);
+    public static void bindService(Context context, final MessengerCallback callback) {
+        Intent mIntent = new Intent(context, PushLayerService.class);
+        context.bindService(mIntent, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                Log.d(TAG,"onServiceConnected:"+name+"&&"+service);
+                Messenger mService = new Messenger(service);
+                if(callback!=null){
+                    callback.onMessengerReturn(mService);
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                Log.d(TAG,"onServiceDisconnected:"+name);
+            }
+        }, Context.BIND_AUTO_CREATE);
     }
 
     @Override

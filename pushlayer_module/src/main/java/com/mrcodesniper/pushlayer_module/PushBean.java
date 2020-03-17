@@ -4,19 +4,19 @@ import java.io.Serializable;
 
 public class PushBean<T> implements Serializable {
 
-    private String bizType;
+    private String action;
 
-    private T content;
+    private T payload;
 
     public String getBizType() {
-        return bizType;
+        return action;
     }
 
-    public void setBizType(String bizType) {
-        this.bizType = bizType;
+    public void setBizType(String action) {
+        this.action = action;
     }
 
     public T getContent() {
-        return content;
+        return payload;
     }
 }

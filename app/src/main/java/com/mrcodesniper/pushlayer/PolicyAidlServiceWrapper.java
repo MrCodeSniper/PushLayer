@@ -27,7 +27,6 @@ public class PolicyAidlServiceWrapper {
         // 创建所需绑定的Service的Intent
         Intent intent = new Intent();
         intent.setAction("com.mrcodesniper.pushlayer_module.action.AIDL_SERVICE");
-//        intent.setPackage("com.example.renkuo.vehiclesafeaidldemo");
         Intent eintent = new Intent(getExplicitIntent(mContext,intent));
         // 绑定远程Service
         boolean binded = mContext.bindService(eintent, conn, Service.BIND_AUTO_CREATE);
@@ -55,7 +54,7 @@ public class PolicyAidlServiceWrapper {
         // Called when the connection with the service disconnects unexpectedly
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            iRemoteService = null;
+                iRemoteService = null;
         }
     };
 

@@ -1,10 +1,17 @@
 package com.mrcodesniper.pushlayer_module;
 
+import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
@@ -13,6 +20,8 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mrcodesniper.pushlayer_module.aidl.AidlMessageCallback;
+import com.mrcodesniper.pushlayer_module.messenger.MessengerReceiveCallback;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -25,6 +34,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PushManager implements IConnect {
@@ -47,6 +57,15 @@ public class PushManager implements IConnect {
 
     private Gson mGson;
 
+    private IMyAidlInterface iRemoteService;
+
+    public void bindAidlService(Context context, ServiceConnection conn){
+        Intent intent = new Intent();
+        intent.setAction("com.mrcodesniper.pushlayer_module.action.AIDL_SERVICE");
+        Intent eintent = new Intent(getExplicitIntent(context,intent));
+        context.bindService(eintent, conn, Service.BIND_AUTO_CREATE);
+    }
+
     private Map<String, MessageReceiveListener> msgReceiveListenerMap = new HashMap<String, MessageReceiveListener>();
     private  Map<String, IMessageReceiveInterface> messageReceiveListenerHashMap = new HashMap<String, IMessageReceiveInterface>();
     private Map<String,Type> typeMap=new HashMap<>();
@@ -59,7 +78,21 @@ public class PushManager implements IConnect {
         return manager;
     }
 
-    public void init(Context context, @NonNull final PushOption option) {
+    public void init(Context context, final PushOption option) {
+        bindAidlService(context, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                iRemoteService = IMyAidlInterface.Stub.asInterface(service);
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                iRemoteService = null;
+            }
+        });
+        if(option==null){
+            return;
+        }
         this.option = option;
         client = new MqttAndroidClient(context, option.getServer(), Build.SERIAL);
         if (mqttConnectOptions == null) {
@@ -72,9 +105,14 @@ public class PushManager implements IConnect {
         }
     }
 
-    public void setSimpleMsgCallback(Context context, Messenger messenger){
+    /**
+     * Messenger模式数据传递
+     * @param context
+     * @param messenger
+     */
+    public void setMsgCallback(Context context, Messenger messenger){
         if(client!=null){
-            client.setCallback(new MsgReceiveCallback(context,mConnectCallback,messenger));
+            client.setCallback(new MessengerReceiveCallback(context,mConnectCallback,messenger));
         }
     }
 
@@ -100,6 +138,20 @@ public class PushManager implements IConnect {
         }
     }
 
+
+    public void registerMsg(String bizType, AidlMessageCallback callback){
+        if (iRemoteService==null) return;
+        try {
+            iRemoteService.registerMsgReceiveListener(bizType, new IMessageReceiveInterface.Stub(){
+                @Override
+                public void onReceivedMsg(String pushData) throws RemoteException {
+                    Log.d(TAG,"registerMsg:"+pushData);
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * 模拟服务器推送消息
@@ -308,5 +360,25 @@ public class PushManager implements IConnect {
      */
     public void unregisterMsgReceiveListener(String bizType) {
         msgReceiveListenerMap.remove("PushManger#" + bizType);
+    }
+
+    private static Intent getExplicitIntent(Context context, Intent implicitIntent) {
+        // Retrieve all services that can match the given intent
+        PackageManager pm = context.getPackageManager();
+        List<ResolveInfo> resolveInfo = pm.queryIntentServices(implicitIntent, 0);
+        // Make sure only one match was found
+        if (resolveInfo == null || resolveInfo.size() != 1) {
+            return null;
+        }
+        // Get component info and create ComponentName
+        ResolveInfo serviceInfo = resolveInfo.get(0);
+        String packageName = serviceInfo.serviceInfo.packageName;
+        String className = serviceInfo.serviceInfo.name;
+        ComponentName component = new ComponentName(packageName, className);
+        // Create a new intent. Use the old one for extras and such reuse
+        Intent explicitIntent = new Intent(implicitIntent);
+        // Set the component to be explicit
+        explicitIntent.setComponent(component);
+        return explicitIntent;
     }
 }

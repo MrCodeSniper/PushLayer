@@ -19,4 +19,11 @@ public interface AppPushConfig {
      */
      String CLIENT_ID = Build.SERIAL;
 
+
+     String PAY_LOAD="payload";
+
+     String ACTION ="action";
+
+     String ACTION_PUSH_MOCK_MSG="pushMockMsg";
+
 }
