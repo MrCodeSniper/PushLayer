@@ -1,3 +1,4 @@
 rootProject.name='PushLayer'
 include ':app'
 include ':pushlayer_module'
+include ':design'
