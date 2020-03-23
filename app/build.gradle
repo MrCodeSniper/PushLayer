@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-
+//apply plugin: 'com.alipay.apollo.baseline.config'
 android {
     compileSdkVersion 28
     buildToolsVersion "29.0.3"
@@ -33,4 +33,11 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:support-annotations:28.0.0'
     implementation project(':pushlayer_module')
+//    compile "com.mpaas.aar:push_xiaomi:3.6.12_simplified"
+//    compile "com.mpaas.aar:push_huawei:2.5.2.201_simplified"
+//    compile "com.mpaas.aar:common:10.1.20_adapter"
+//    compile "com.mpaas.aar:rpc:10.1.20.4"
+//    compile 'com.mpaas.aar:logging:10.1.32.0'
+//    compile 'com.mpaas.aar:monitor:10.1.32.0'
+//    compile 'com.mpaas.aar:pushsdk-build:10.1.32.2'
 }

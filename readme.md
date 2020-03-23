@@ -54,6 +54,24 @@
 1.长连接？
 2.协议格式 优点或者缺点
 
+
+#### SDK
+```groovy
+compile "com.mpaas.aar:common:10.1.20_adapter"
+compile "com.mpaas.aar:rpc:10.1.20.4"
+compile 'com.mpaas.aar:logging:10.1.32.0'
+compile 'com.mpaas.aar:monitor:10.1.32.0'
+compile 'com.mpaas.aar:pushsdk-build:10.1.32.2'
+```
+
+公共抽象层
+RPC层
+日志层
+监控层
+PUSHSDK
+
+
+
 #### 附录
 
 https://www.cnblogs.com/lixiansheng/p/11359922.html
