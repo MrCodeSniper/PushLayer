@@ -67,8 +67,16 @@ compile 'com.mpaas.aar:pushsdk-build:10.1.32.2'
 公共抽象层
 RPC层
 日志层
+LoggerFactory日志工厂封装了不同类型的日志类
+初始化时需要注意多线程并发
+
 监控层
+ClientMonitor
+初始化时使用MonitorFactoryBinder工厂进行多方面监控的初始化
+
 PUSHSDK
+1.首先收集用户 手机 和包信息
+2.启动推送进程服务 监听推送
 
 
 
